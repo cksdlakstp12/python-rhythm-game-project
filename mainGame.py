@@ -22,7 +22,8 @@ clock = P.time.Clock()
 #####################################################################
 
 # 1. 사용자 게임 초기화 (배경 화면, 게임 이미지, 좌표, 속도, 폰트 등)
-title_font = P.font.Font(None, 80)
+title_font = P.font.Font(None, 100)
+default_font = P.font.Font(None, 70)
 
 current_path = os.path.dirname(__file__)
 image_path = os.path.join(current_path, "img")
@@ -32,16 +33,17 @@ select_music_menu_background = P.image.load(os.path.join(image_path, "select_mus
 background = P.image.load(os.path.join(image_path, "background.png"))
 
 
-select_menu_sound = P.mixer.music.load("./sounds/눈사람.wav") #적당한 브금 찾아서 넣기
+btn_click_sound = P.mixer.Sound("./sounds/other_btn.wav")
+btn_click_sound.set_volume(0.5)
+select_music_sound = P.mixer.Sound("./sounds/game_start.wav") #적당한 브금 찾아서 넣기
 music_volume = 1.0
+
 
 
 option_window = P.image.load(os.path.join(image_path, "option_window.png"))
 option_window_size = option_window.get_rect().size
 option_window_width = option_window_size[0]
 option_window_height = option_window_size[1]
-
-
 
 
 game_start_btn = P.image.load(os.path.join(image_path, "game_start_btn.png"))
@@ -103,7 +105,14 @@ hit_effect = P.image.load(os.path.join(image_path, "hit_effect.png"))
 node_hit_chk = [False, False, False, False]
 
 def option_window_open():
+    # volume_line_cnt에 맞춰서 volume_line 만들기
     global music_volume
+
+    music_volume_title = "Music Volume"
+    music_volume_title_msg = default_font.render(music_volume_title, True, (0, 0, 0))
+    music_volume_title_msg_rect = music_volume_title_msg.get_rect(center=(int((screen_width)/2), int((screen_height)/2 - 20)))
+
+    volume_line_cnt = 0
 
     cancel = False
 
@@ -111,24 +120,26 @@ def option_window_open():
     option_window_rect.left = (screen_width - option_window_width)/2
     option_window_rect.top = (screen_height - option_window_height)/2
 
-    # + - 버튼 위치 조정 하기
-    # pygmae volume 참고 : https://jbmpa.com/pygame/10
+    
     volume_plus_btn_rect = volume_plus_btn.get_rect()
-    volume_plus_btn_rect.left = ((screen_width - option_window_width)/2 - volume_plus_btn_width) / 2 + 275
-    volume_plus_btn_rect.top = ((screen_height - option_window_height)/2 - volume_plus_btn_height) / 2 + 100
+    volume_plus_btn_rect.left = (screen_width - volume_plus_btn_width) / 2 + 275
+    volume_plus_btn_rect.top = (screen_height  - volume_plus_btn_height) / 2 + 60
 
     volume_minus_btn_rect = volume_minus_btn.get_rect()
-    volume_minus_btn_rect.left = ((screen_width - option_window_width)/2 - volume_minus_btn_width) / 2 - 275
-    volume_minus_btn_rect.top = ((screen_height - option_window_height)/2 - volume_minus_btn_height) / 2 + 100
+    volume_minus_btn_rect.left = (screen_width - volume_minus_btn_width) / 2 - 275
+    volume_minus_btn_rect.top = (screen_height - volume_minus_btn_height) / 2 + 60
 
     cancel_btn_rect = cancel_btn.get_rect()
-    cancel_btn_rect.left = ((screen_width - option_window_width)/2 - cancel_btn_width) / 2
-    cancel_btn_rect.top = ((screen_height - option_window_height)/2 - cancel_btn_height) / 2 + 175
+    cancel_btn_rect.left = (screen_width - cancel_btn_width) / 2
+    cancel_btn_rect.top = (screen_height - cancel_btn_height) / 2 + 175
     
     clicked_btn = []
     option_window_btn_list = [volume_plus_btn_rect, volume_minus_btn_rect, cancel_btn_rect]
 
     while not cancel:
+        music_volume = P.mixer.music.get_volume()
+        volume_line_cnt = int(music_volume * 10)
+
         for event in P.event.get():
             if event.type == P.QUIT:
                 cancel = True
@@ -140,25 +151,34 @@ def option_window_open():
 
 
         if volume_plus_btn_rect in clicked_btn:
+            btn_click_sound.play()
             if music_volume < 1.0:
-                music_volume = music_volume + 0.1
+                music_volume += 0.1
+                P.mixer.music.set_volume(music_volume)
+            clicked_btn = []
 
         elif volume_minus_btn_rect in clicked_btn:
+            btn_click_sound.play()
             if music_volume > 0.0:
-                music_volume = music_volume - 0.1
+                music_volume -= 0.1
+                P.mixer.music.set_volume(music_volume)
+            clicked_btn = []
 
         elif cancel_btn_rect in clicked_btn:
+            btn_click_sound.play()
             return
 
         screen.blit(option_window, ((screen_width - option_window_width)/2, (screen_height - option_window_height)/2))
-        screen.blit(volume_plus_btn, (((screen_width - option_window_width)/2 - volume_plus_btn_width) / 2 + 275, ((screen_height - option_window_height)/2 - volume_plus_btn_height) / 2 + 100))
-        screen.blit(volume_minus_btn, (((screen_width - option_window_width)/2 - volume_minus_btn_width) / 2 - 275, ((screen_height - option_window_height)/2 - volume_minus_btn_height) / 2 + 100))
+        screen.blit(music_volume_title_msg, music_volume_title_msg_rect)
+        screen.blit(volume_plus_btn, ((screen_width- volume_plus_btn_width) / 2 + 275, (screen_height - volume_plus_btn_height) / 2 + 60))
+        screen.blit(volume_minus_btn, ((screen_width - volume_minus_btn_width) / 2 - 275, (screen_height - volume_minus_btn_height) / 2 + 60))
+        for space in range(0, volume_line_cnt):
+            P.draw.rect(screen, (134, 240, 134), [((screen_width- volume_plus_btn_width) / 2 + volume_plus_btn_width - 250 + space * 46), ((screen_height - volume_plus_btn_height) / 2 + 60), 40, 50])
+        screen.blit(cancel_btn, ((screen_width - cancel_btn_width) / 2, (screen_height - cancel_btn_height) / 2 + 175))
 
         P.display.update()
 
     P.quit()
-
-    
 
 
 def start_menu():
@@ -193,6 +213,7 @@ def start_menu():
 
     while (not start_menu_quit_chk) and start_menu_select_chk:
         
+        
         # 2. 이벤트 처리 (키보드, 마우스 등)
         for event in P.event.get():
             if event.type == P.QUIT:
@@ -206,18 +227,21 @@ def start_menu():
             
         if game_start_btn_rect in clicked_btn:
             print("게임시작")
+            btn_click_sound.play()
             P.mixer.music.stop()
             select_music()
+            clicked_btn = []
 
         elif option_btn_rect in clicked_btn:
+            btn_click_sound.play()
             option_window_open()
+            clicked_btn = []
 
         elif game_quit_btn_rect in clicked_btn: 
+            btn_click_sound.play()
             print("종료 버튼 클릭")
             start_menu_select_chk = False
             
-        
-        
         
         screen.blit(start_menu_background, (0, 0))
         screen.blit(game_title_msg, game_title_msg_rect)
@@ -232,12 +256,15 @@ def start_menu():
 # 시작 화면 완성 이제 음악 선택 화면 만들기
 
 def select_music():
+    global music_volume
+
     P.mixer.music.load("./sounds/눈사람.wav") #적당한 브금 찾아서 넣기
-    P.mixer.music.set_volume(music_volume)
+    
     P.mixer.music.play(-1)
     select_music_quit_chk = True
 
     while select_music_quit_chk:
+        P.mixer.music.set_volume(music_volume)
         
         # 2. 이벤트 처리 (키보드, 마우스 등)
         for event in P.event.get():
