@@ -2,6 +2,9 @@ import pygame as P
 import os, sys
 import musicFunctions
 import time
+import requests
+import random
+from bs4 import BeautifulSoup
 
 #####################################################################
 # 기본 초기화 (반드시 해야하는 것들)
@@ -27,39 +30,33 @@ default_font = P.font.Font(None, 70)
 
 current_path = os.path.dirname(__file__)
 image_path = os.path.join(current_path, "img")
+music_path = os.path.join(current_path, "sounds")
 
 start_menu_background = P.image.load(os.path.join(image_path, "start_menu_background.png")) 
 select_music_menu_background = P.image.load(os.path.join(image_path, "select_music_menu_background.png")) 
 background = P.image.load(os.path.join(image_path, "background.png"))
 
 
-btn_click_sound = P.mixer.Sound("./sounds/other_btn.wav")
+btn_click_sound = P.mixer.Sound(os.path.join(music_path, "other_btn.wav"))
 btn_click_sound.set_volume(0.5)
-select_music_sound = P.mixer.Sound("./sounds/game_start.wav") #적당한 브금 찾아서 넣기
+select_music_sound = P.mixer.Sound(os.path.join(music_path, "game_start.wav")) #적당한 브금 찾아서 넣기
+select_music_sound.set_volume(0.5)
 music_volume = 1.0
 
 
+# weather data crawling
+html = requests.get('https://search.naver.com/search.naver?query=날씨')
+soup = BeautifulSoup(html.text, 'html.parser')
+data = soup.find("div", {'class':'weather_box'})
+weatherData = data.find('p', {'class':'cast_txt'}).text
+print(weatherData)
 
+
+# option window png files
 option_window = P.image.load(os.path.join(image_path, "option_window.png"))
 option_window_size = option_window.get_rect().size
 option_window_width = option_window_size[0]
 option_window_height = option_window_size[1]
-
-
-game_start_btn = P.image.load(os.path.join(image_path, "game_start_btn.png"))
-game_start_btn_size = game_start_btn.get_rect().size
-game_start_btn_width = game_start_btn_size[0]
-game_start_btn_height = game_start_btn_size[1]
-
-option_btn = P.image.load(os.path.join(image_path, "option_btn.png"))
-option_btn_size = option_btn.get_rect().size
-option_btn_width = option_btn_size[0]
-option_btn_height = option_btn_size[1]
-
-game_quit_btn = P.image.load(os.path.join(image_path, "game_quit_btn.png"))
-game_quit_btn_size = game_quit_btn.get_rect().size
-game_quit_btn_width = game_quit_btn_size[0]
-game_quit_btn_height = game_quit_btn_size[1]
 
 volume_plus_btn = P.image.load(os.path.join(image_path, "volume_plus_btn.png"))
 volume_plus_btn_size = volume_plus_btn.get_rect().size
@@ -76,22 +73,47 @@ cancel_btn_size = cancel_btn.get_rect().size
 cancel_btn_width = cancel_btn_size[0]
 cancel_btn_height = cancel_btn_size[1]
 
-back_arrow = P.image.load(os.path.join(image_path, "back_arrow.png"))
-back_arrow_size = back_arrow.get_rect().size
-back_arrow_width = back_arrow_size[0]
-back_arrow_height = back_arrow_size[1]
 
-right_arrow = P.image.load(os.path.join(image_path, "right_arrow.png"))
-right_arrow_size = right_arrow.get_rect().size
-right_arrow_width = right_arrow_size[0]
-right_arrow_height = right_arrow_size[1]
+# start menu png files
+game_start_btn = P.image.load(os.path.join(image_path, "game_start_btn.png"))
+game_start_btn_size = game_start_btn.get_rect().size
+game_start_btn_width = game_start_btn_size[0]
+game_start_btn_height = game_start_btn_size[1]
 
-left_arrow = P.image.load(os.path.join(image_path, "left_arrow.png"))
-left_arrow_size = left_arrow.get_rect().size
-left_arrow_width = left_arrow_size[0]
-left_arrow_height = left_arrow_size[1]
+option_btn = P.image.load(os.path.join(image_path, "option_btn.png"))
+option_btn_size = option_btn.get_rect().size
+option_btn_width = option_btn_size[0]
+option_btn_height = option_btn_size[1]
+
+game_quit_btn = P.image.load(os.path.join(image_path, "game_quit_btn.png"))
+game_quit_btn_size = game_quit_btn.get_rect().size
+game_quit_btn_width = game_quit_btn_size[0]
+game_quit_btn_height = game_quit_btn_size[1]
 
 
+# select music menu png files
+back_arrow_btn = P.image.load(os.path.join(image_path, "back_arrow.png"))
+back_arrow_btn_size = back_arrow_btn.get_rect().size
+back_arrow_btn_width = back_arrow_btn_size[0]
+back_arrow_btn_height = back_arrow_btn_size[1]
+
+right_arrow_btn = P.image.load(os.path.join(image_path, "right_arrow.png"))
+right_arrow_btn_size = right_arrow_btn.get_rect().size
+right_arrow_btn_width = right_arrow_btn_size[0]
+right_arrow_btn_height = right_arrow_btn_size[1]
+
+left_arrow_btn = P.image.load(os.path.join(image_path, "left_arrow.png"))
+left_arrow_btn_size = left_arrow_btn.get_rect().size
+left_arrow_btn_width = left_arrow_btn_size[0]
+left_arrow_btn_height = left_arrow_btn_size[1]
+
+select_music_btn = P.image.load(os.path.join(image_path, "select_music_btn.png"))
+select_music_btn_size = select_music_btn.get_rect().size
+select_music_btn_width = select_music_btn_size[0]
+select_music_btn_height = select_music_btn_size[1]
+
+
+# start game files
 node1 = P.image.load(os.path.join(image_path, "node.png"))
 node2 = P.image.load(os.path.join(image_path, "node.png"))
 node3 = P.image.load(os.path.join(image_path, "node.png"))
@@ -103,6 +125,27 @@ node_width = node_size[0]
 hit_effect = P.image.load(os.path.join(image_path, "hit_effect.png"))
 
 node_hit_chk = [False, False, False, False]
+
+fade_img = P.image.load(os.path.join(image_path, "fade_img.png"))
+
+
+
+total_time = 3
+
+
+def fade_out_img():
+    for x in range(0, 255):
+        fade_img.set_alpha(x)
+        screen.blit(fade_img, (0, 0))
+        P.display.update()
+
+def count_down(start_ticks):
+    elapsed_time = (P.time.get_ticks() - start_ticks) / 1000
+    timer = default_font.render(str(int(total_time - elapsed_time + 1)), True, (255, 255, 255))
+    screen.blit(timer, (screen_width / 2, screen_height / 2))
+    if total_time - elapsed_time <= 0: return
+    P.display.update()
+    
 
 def option_window_open():
     # volume_line_cnt에 맞춰서 volume_line 만들기
@@ -138,7 +181,7 @@ def option_window_open():
 
     while not cancel:
         music_volume = P.mixer.music.get_volume()
-        volume_line_cnt = int(music_volume * 10)
+        volume_line_cnt = int(round((music_volume * 10)))
 
         for event in P.event.get():
             if event.type == P.QUIT:
@@ -188,32 +231,33 @@ def start_menu():
     game_title_msg = title_font.render(game_title, True, (255, 255, 255))
     game_title_msg_rect = game_title_msg.get_rect(center=(int(screen_width/2), int(screen_height / 2 - 200)))
 
-    P.mixer.music.load("./sounds/비.wav") #적당한 브금 찾아서 넣기
-    P.mixer.music.set_volume(music_volume)
+    P.mixer.music.load(os.path.join(music_path, "비.wav")) #적당한 브금 찾아서 넣기
     P.mixer.music.play(-1)
 
     start_menu_quit_chk = False
     start_menu_select_chk = True
 
     game_start_btn_rect = game_start_btn.get_rect()
-    game_start_btn_rect.left = (screen_width - game_quit_btn_width)/2
-    game_start_btn_rect.top = (screen_height - game_quit_btn_height)/2  - 50
+    game_start_btn_rect.left = (screen_width-game_start_btn_width)/2
+    game_start_btn_rect.top = (screen_height - game_start_btn_height)/2 - 50
 
     option_btn_rect = option_btn.get_rect()
-    option_btn_rect.left = (screen_width - option_btn_width)/2
+    option_btn_rect.left = (screen_width-option_btn_width)/2
     option_btn_rect.top = (screen_height - option_btn_height)/2 + 100
 
     game_quit_btn_rect = game_quit_btn.get_rect()
-    game_quit_btn_rect.left = (screen_width - game_start_btn_width)/2
-    game_quit_btn_rect.top = (screen_height - game_start_btn_height)/2 + 250
+    game_quit_btn_rect.left = (screen_width-game_quit_btn_width)/2
+    game_quit_btn_rect.top = (screen_height - game_quit_btn_height)/2 + 250
+    
 
     clicked_btn = []
     start_menu_btn_list = [game_quit_btn_rect, game_start_btn_rect, option_btn_rect]
 
+    
 
     while (not start_menu_quit_chk) and start_menu_select_chk:
-        
-        
+        P.mixer.music.set_volume(music_volume)
+                
         # 2. 이벤트 처리 (키보드, 마우스 등)
         for event in P.event.get():
             if event.type == P.QUIT:
@@ -228,7 +272,6 @@ def start_menu():
         if game_start_btn_rect in clicked_btn:
             print("게임시작")
             btn_click_sound.play()
-            P.mixer.music.stop()
             select_music()
             clicked_btn = []
 
@@ -256,16 +299,46 @@ def start_menu():
 # 시작 화면 완성 이제 음악 선택 화면 만들기
 
 def select_music():
-    global music_volume
-
-    P.mixer.music.load("./sounds/눈사람.wav") #적당한 브금 찾아서 넣기
-    
-    P.mixer.music.play(-1)
     select_music_quit_chk = True
+
+    back_arrow_btn_rect = back_arrow_btn.get_rect()
+    back_arrow_btn_rect.left = 10
+    back_arrow_btn_rect.top = 10
+    
+    left_arrow_btn_rect = left_arrow_btn.get_rect() 
+    left_arrow_btn_rect.left = left_arrow_btn_width
+    left_arrow_btn_rect.top = (screen_height - left_arrow_btn_height) / 2
+
+    right_arrow_btn_rect = right_arrow_btn.get_rect()    
+    right_arrow_btn_rect.left = screen_width - right_arrow_btn_width * 2
+    right_arrow_btn_rect.top = (screen_height - right_arrow_btn_height) / 2
+
+    select_music_btn_rect = select_music_btn.get_rect()
+    select_music_btn_rect.left = (screen_width - select_music_btn_width)/2
+    select_music_btn_rect.top = (screen_height - select_music_btn_height)/2 + 300
+        
+
+    clicked_btn = []
+    start_menu_btn_list = [back_arrow_btn_rect, left_arrow_btn_rect, right_arrow_btn_rect, select_music_btn_rect]
+
+    music_list_idx_chk = 0
+
+    recomend_music = []
+    
+    for music in musicFunctions.soundList:
+        if music.getMusicType() in weatherData:
+            recomend_music.append(music)
+
+    random_recomend = random.randint(0, len(recomend_music)-1)
+
+    recomend_music = [recomend_music[random_recomend]]
+
+    musicFunctions.soundList.insert(0, recomend_music[0])
+
 
     while select_music_quit_chk:
         P.mixer.music.set_volume(music_volume)
-        
+
         # 2. 이벤트 처리 (키보드, 마우스 등)
         for event in P.event.get():
             if event.type == P.QUIT:
@@ -274,15 +347,85 @@ def select_music():
             if event.type == P.MOUSEBUTTONUP:
                 pos = P.mouse.get_pos()
 
+                clicked_btn = [b for b in start_menu_btn_list if b.collidepoint(pos)]
 
+        if back_arrow_btn_rect in clicked_btn:
+            btn_click_sound.play()
+            return
+
+        elif left_arrow_btn_rect in clicked_btn:
+            btn_click_sound.play()
+            if music_list_idx_chk > 0:
+                music_list_idx_chk -= 1
+
+            clicked_btn = []
         
-            
+        elif right_arrow_btn_rect in clicked_btn:
+            btn_click_sound.play()
+            if music_list_idx_chk < (len(musicFunctions.soundList) - 1):
+                music_list_idx_chk += 1
 
-
+            clicked_btn = []
+        
+        elif select_music_btn_rect in clicked_btn:
+            select_music_sound.play()
+            P.mixer.music.stop()
+            fade_out_img()
+            start_game(music_list_idx_chk)
+            fade_out_img()
+            P.mixer.music.play(-1)
+            clicked_btn = []
+    
         screen.blit(select_music_menu_background, (0, 0))
-        screen.blit(back_arrow, (10, 10))
-        screen.blit(left_arrow, (left_arrow_width, (screen_height - left_arrow_height) / 2))
-        screen.blit(right_arrow, (screen_width - right_arrow_width * 2, (screen_height - right_arrow_height) / 2))
+
+        if music_list_idx_chk == 0:
+            first_img = P.image.load(os.path.join(image_path, musicFunctions.soundList[music_list_idx_chk].getCoverImage()))
+            first_img_size = first_img.get_rect().size
+            first_img_width = first_img_size[0]
+            first_img_height = first_img_size[1]
+            second_img = P.image.load(os.path.join(image_path, musicFunctions.soundList[music_list_idx_chk + 1].getCoverImage()))
+            second_img_size = second_img.get_rect().size
+            second_img_width = second_img_size[0]
+            second_img_height = second_img_size[1]
+
+            screen.blit(first_img, ((screen_width - first_img_width)/2, (screen_height - first_img_height)/ 2))
+            screen.blit(second_img, ((screen_width - second_img_width)/2 + first_img_width + 100, (screen_height - second_img_height)/ 2))
+            
+        elif music_list_idx_chk == (len(musicFunctions.soundList) - 1):            
+            first_img = P.image.load(os.path.join(image_path, musicFunctions.soundList[music_list_idx_chk - 1].getCoverImage()))
+            first_img_size = first_img.get_rect().size
+            first_img_width = first_img_size[0]
+            first_img_height = first_img_size[1]
+            second_img = P.image.load(os.path.join(image_path, musicFunctions.soundList[music_list_idx_chk].getCoverImage()))
+            second_img_size = second_img.get_rect().size
+            second_img_width = second_img_size[0]
+            second_img_height = second_img_size[1]
+
+            screen.blit(first_img, ((screen_width - first_img_width)/2 - second_img_width - 100, (screen_height - first_img_height)/ 2))
+            screen.blit(second_img, ((screen_width - second_img_width)/2, (screen_height - second_img_height)/ 2))
+            
+        else:
+            first_img = P.image.load(os.path.join(image_path, musicFunctions.soundList[music_list_idx_chk - 1].getCoverImage()))
+            first_img_size = first_img.get_rect().size
+            first_img_width = first_img_size[0]
+            first_img_height = first_img_size[1]
+            second_img = P.image.load(os.path.join(image_path, musicFunctions.soundList[music_list_idx_chk].getCoverImage()))
+            second_img_size = second_img.get_rect().size
+            second_img_width = second_img_size[0]
+            second_img_height = second_img_size[1]
+            third_img = P.image.load(os.path.join(image_path, musicFunctions.soundList[music_list_idx_chk + 1].getCoverImage()))
+            third_img_size = third_img.get_rect().size
+            third_img_width = third_img_size[0]
+            third_img_height = third_img_size[1]
+            
+            screen.blit(first_img, ((screen_width - first_img_width)/2 - second_img_width - 100, (screen_height - first_img_height)/ 2))
+            screen.blit(second_img, ((screen_width - second_img_width)/2, (screen_height - second_img_height)/ 2))
+            screen.blit(third_img, ((screen_width - third_img_width)/2 + second_img_width + 100, (screen_height - third_img_height)/ 2))
+        
+        screen.blit(back_arrow_btn, (10, 10))
+        screen.blit(left_arrow_btn, (left_arrow_btn_width, (screen_height - left_arrow_btn_height) / 2))
+        screen.blit(right_arrow_btn, (screen_width - right_arrow_btn_width * 2, (screen_height - right_arrow_btn_height) / 2))
+        screen.blit(select_music_btn, ((screen_width-select_music_btn_width)/2, (screen_height - select_music_btn_height)/2 + 300))
         
 
         P.display.update()
@@ -290,15 +433,20 @@ def select_music():
     
 
     P.mixer.music.stop()
-    
+    del musicFunctions.soundList[0]
+
     P.quit()
 
 
-def start_game():
+def start_game(music_index):
+    start_ticks = P.time.get_ticks()
+    
+
     start_game_chk = True
 
     while start_game_chk:
         dt = clock.tick(30)
+        count_down(start_ticks)
         
         # 2. 이벤트 처리 (키보드, 마우스 등)
         for event in P.event.get():
