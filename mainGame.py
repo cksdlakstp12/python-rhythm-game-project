@@ -32,6 +32,7 @@ title_font = P.font.Font(font_path, 80)
 btn_font = P.font.Font(font_path, 60)
 music_font = P.font.Font(font_path, 50)
 default_font = P.font.Font(font_path, 32)
+in_game_font = P.font.Font(font_path, 20)
 
 background = P.image.load(os.path.join(image_path, "background.jpg")) 
 background.set_alpha(100)
@@ -709,14 +710,14 @@ def game_result(score, combo, music_index):
                 clicked_btn = [b for b in start_menu_btn_list if b.collidepoint(pos)]
 
         if restart_btn_rect in clicked_btn:
-            btn_click_sound.play()
+            select_music_sound.play()
             return "restart"
 
         elif game_quit_rect in clicked_btn: 
             btn_click_sound.play()
             return "quit"
 
-        if score_tmp < score: score_tmp += 1
+        if score_tmp < score: score_tmp += 100
         elif best_score_tmp < best_score_int: best_score_tmp += 1
         elif combo_tmp < combo: combo_tmp += 1
 
@@ -755,7 +756,6 @@ def game_result(score, combo, music_index):
         P.display.update()
 
     P.quit()
-
 
 
 def start_game(music_index):
@@ -808,9 +808,6 @@ def start_game(music_index):
     bad_msg_rect = bad_msg.get_rect(center=(int(screen_width/2 - 200), int(screen_height / 2)))
 
     node_list = musicFunctions.soundList[music_index].getNodeList()
-    node_list_length = len(musicFunctions.soundList[music_index].getNodeList())
-    
-    node_list_chk = 0
 
     timer_chk = True
 
@@ -819,17 +816,14 @@ def start_game(music_index):
     music_chk = True
 
     start_ticks_chk = True
+
+    tmp_time = 0
     
     clicked_btn = []
+
     start_menu_btn_list = [option_btn_icon_rect]
 
     hit_node_list = []
-
-    for i in range(len(node_list)):
-        r = random.randint(0, 3)
-        width = (2 * r + 1) * 10 + r * hit_node_width + 1 + 10
-        hit_node_list.append(musicNodeList.Node(width, - hit_node_height))
-
 
     start_game_chk = True
 
@@ -838,6 +832,12 @@ def start_game(music_index):
     combo = 0
 
     total_score = 0
+
+    elapsed_time_chk = False
+
+    node_fin_chk = 0
+
+    node_clicked_chk = False
 
     while start_game_chk:
 
@@ -863,10 +863,22 @@ def start_game(music_index):
                 elif event.key == P.K_d: node_hit_chk[2] = False
                 elif event.key == P.K_f: node_hit_chk[3] = False
 
+
+
             elif event.type == P.MOUSEBUTTONDOWN:
                 pos = P.mouse.get_pos()
 
                 clicked_btn = [b for b in start_menu_btn_list if b.collidepoint(pos)]
+
+        in_game_score = "SCORE : {}".format(total_score)
+        in_game_score_msg = in_game_font.render(in_game_score, True, (255, 255, 255))
+        in_game_score_msg_rect = in_game_score_msg.get_rect(center=(int(screen_width/2 + 400), int(screen_height / 2 - 100)))
+
+        in_game_combo = "COMBO : {}".format(combo)
+        in_game_combo_msg = in_game_font.render(in_game_combo, True, (255, 255, 255))
+        in_game_combo_msg_rect = in_game_combo_msg.get_rect(center=(int(screen_width/2 + 400), int(screen_height / 2)))
+
+
 
         if option_btn_icon_rect in clicked_btn:
             print("게임 중지")
@@ -891,14 +903,6 @@ def start_game(music_index):
         screen.blit(default_background, (0, 0))
         screen.blit(background, (0, -(screen_height - background_height) / 2))
         screen.blit(option_btn_icon, ((screen_width - option_btn_icon_width - 10), 10))
-
-
-        if len(node_list_tmp) == 0: # 게임 종료 부분 더 정확히 하기
-            time.sleep(5)
-            P.mixer.music.stop()
-            fade_out_img()
-            result = game_result(total_score, combo, music_index)
-            return result
 
         
         for i in range(0,4):
@@ -938,52 +942,75 @@ def start_game(music_index):
                 game_started_chk = True
                 timer_chk = False
                 music_chk = False
+                start_ticks = P.time.get_ticks()
 
-            
-            if hit_node_list[len(hit_node_list) - 1].getYPos() < (screen_height + hit_node_height):
-                for node in hit_node_list:
-                    if len(node_list) > 0:
-                        node_list[0]
-                        del node_list[0]
-                    if node.getYPos() < (screen_height + node_height):
-                        hit_node_rect = hit_node.get_rect()
-                        hit_node_rect.left = node.getXPos()
-                        hit_node_rect.top = node.getYPos()
 
-                        screen.blit(hit_node, (node.getXPos(), node.getYPos()))
-                        node.plusYPos(node_speed * dt)
+            for node in hit_node_list:
+                if node.getYPos() < (screen_height + node_height):
+                    hit_node_rect = hit_node.get_rect()
+                    hit_node_rect.left = node.getXPos()
+                    hit_node_rect.top = node.getYPos()
 
-                        if (abs(node1_rect.top - hit_node_rect.top) / node_height * 100 <= 10) and node_hit_chk[0]:
-                            combo += 1
-                            total_score += 1000
-                            screen.blit(perfect_msg, perfect_msg_rect)
+                    screen.blit(hit_node, (node.getXPos(), node.getYPos()))
+                    node.plusYPos(node_speed * dt)
 
-                        elif (abs(node2_rect.top - hit_node_rect.top) / node_height * 100 <= 30) and node_hit_chk[1]:
-                            combo += 1
-                            total_score += 800
-                            screen.blit(greate_msg, greate_msg_rect)
+                    if (abs(node1_rect.top - hit_node_rect.top) / node_height * 100 <= 10) and node_hit_chk[0]:
+                        combo += 1
+                        total_score += 1000
+                        screen.blit(perfect_msg, perfect_msg_rect)
+                        del hit_node_list[0]
 
-                        elif (abs(node3_rect.top - hit_node_rect.top) / node_height * 100 <= 50) and node_hit_chk[2]:
-                            combo += 1
-                            total_score += 600
-                            screen.blit(good_msg, good_msg_rect)
+                    elif (abs(node2_rect.top - hit_node_rect.top) / node_height * 100 <= 30) and node_hit_chk[1]:
+                        combo += 1
+                        total_score += 800
+                        screen.blit(greate_msg, greate_msg_rect)
+                        del hit_node_list[0]
 
-                        elif (abs(node4_rect.top - hit_node_rect.top) / node_height * 100 <= 70) and node_hit_chk[3]:
-                            combo = 0
-                            total_score += 200
-                            screen.blit(nice_msg, nice_msg_rect)
-                        
-                        elif ((abs(node1_rect.top - hit_node_rect.top) / node_height * 100 <= 100) or\
-                            (abs(node2_rect.top - hit_node_rect.top) / node_height * 100 <= 100) or\
-                            (abs(node3_rect.top - hit_node_rect.top) / node_height * 100 <= 100) or\
-                            (abs(node4_rect.top - hit_node_rect.top) / node_height * 100 <= 100)) and\
-                            (node_hit_chk[0] or node_hit_chk[1] or node_hit_chk[2] or node_hit_chk[3]):
-                            combo = 0
-                            total_score += 0
-                            screen.blit(bad_msg, bad_msg_rect)
+                    elif (abs(node3_rect.top - hit_node_rect.top) / node_height * 100 <= 50) and node_hit_chk[2]:
+                        combo += 1
+                        total_score += 600
+                        screen.blit(good_msg, good_msg_rect)
+                        del hit_node_list[0]
+
+                    elif (abs(node4_rect.top - hit_node_rect.top) / node_height * 100 <= 70) and node_hit_chk[3]:
+                        combo = 0
+                        total_score += 200
+                        screen.blit(nice_msg, nice_msg_rect)
+                        del hit_node_list[0]
                     
+                    elif (((node1_rect.top - hit_node_rect.top) / node_height * 100 <= -95) or\
+                          ((node2_rect.top - hit_node_rect.top) / node_height * 100 <= -95) or\
+                          ((node3_rect.top - hit_node_rect.top) / node_height * 100 <= -95) or\
+                          ((node4_rect.top - hit_node_rect.top) / node_height * 100 <= -95)):
+                        combo = 0
+                        screen.blit(bad_msg, bad_msg_rect)
+                        del hit_node_list[0]
+
+                    elif (node_hit_chk[0] or node_hit_chk[1] or node_hit_chk[2] or node_hit_chk[3]):
+                        combo = 0
+                        screen.blit(bad_msg, bad_msg_rect)
+
+        elapsed_time = int((P.time.get_ticks() - start_ticks) / 1000)
+        if tmp_time != elapsed_time: elapsed_time_chk = True
+        tmp_time = elapsed_time
+
+        if elapsed_time_chk:
+            if elapsed_time in node_list:
+                r = random.randint(0, 3)
+                x_pos = (2 * r + 1) * 10 + r * node_width + 11
+                hit_node_list.append(musicNodeList.Node(x_pos, 0))
+                elapsed_time_chk = False
+                node_fin_chk += 1
                     
-        
+        if len(node_list) == node_fin_chk:
+            time.sleep(7)
+            P.mixer.music.stop()
+            fade_out_img()
+            result = game_result(total_score, combo, music_index)
+            return result
+
+        screen.blit(in_game_score_msg, in_game_score_msg_rect)
+        screen.blit(in_game_combo_msg, in_game_combo_msg_rect)
         
 
         P.display.update()

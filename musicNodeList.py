@@ -1,6 +1,3 @@
-import time
-
-
 class Node:
     def __init__(self, x_pos, y_pos):
         self.__x_pos = x_pos
@@ -15,11 +12,6 @@ class Node:
     def getYPos(self):
         return self.__y_pos
 
-    
-def delay(delay_time):
-    return time.sleep(delay_time)
-
-
 tmp_node_list = [
-    delay(0), delay(3), delay(3), delay(3), delay(3), delay(5), delay(5), delay(5), delay(5), delay(5), delay(5)
+    3, 7, 10, 13, 16, 18, 20, 23, 25
 ]
