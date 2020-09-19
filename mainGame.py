@@ -182,6 +182,8 @@ fade_img = P.image.load(os.path.join(image_path, "fade_img.png"))
 
 total_time = 3
 
+#####################################################################
+
 
 def fade_out_img():
     for x in range(0, 255):
@@ -339,6 +341,9 @@ def in_game_option_window_open():
         for event in P.event.get():
             if event.type == P.QUIT:
                 cancel = True
+
+            elif event.type == P.KEYDOWN:
+                if event.key == P.K_ESCAPE: clicked_btn = [game_continue_btn_rect]
             
             elif event.type == P.MOUSEBUTTONUP:
                 pos = P.mouse.get_pos()
@@ -897,7 +902,9 @@ def start_game(music_index, soundList):
 
     pushed_time = 0
 
-    special_chk = False
+    special_chk1 = False
+    special_chk2 = False
+    special_chk3 = False
 
     while start_game_chk:
 
@@ -908,15 +915,19 @@ def start_game(music_index, soundList):
                 start_game_chk = False
                 
             elif event.type == P.KEYDOWN:
-                if (event.key == P.K_d) and (event.key == P.K_j) and (event.key == P.K_a): special_chk = True
-
                 if event.key == P.K_a: note_hit_chk[0] = True
                 elif event.key == P.K_s: note_hit_chk[1] = True
-                elif event.key == P.K_d: note_hit_chk[2] = True
+                elif event.key == P.K_d: 
+                    note_hit_chk[2] = True
+                    special_chk1 = True
                 elif event.key == P.K_f: note_hit_chk[3] = True
                 elif event.key == P.K_ESCAPE: clicked_btn = [option_btn_icon_rect]
                 
-                
+                if special_chk1:
+                    if event.key == P.K_j: special_chk2 = True
+                if special_chk2:
+                    if event.key == P.K_a: special_chk3 = True
+
             elif event.type == P.KEYUP:
                 if event.key == P.K_a: note_hit_chk[0] = False
                 elif event.key == P.K_s: note_hit_chk[1] = False
@@ -964,7 +975,7 @@ def start_game(music_index, soundList):
         screen.blit(default_background, (0, 0))
         screen.blit(background, (0, -(screen_height - background_height) / 2))
         screen.blit(option_btn_icon, ((screen_width - option_btn_icon_width - 10), 10))
-        if special_chk: screen.blit(special_background, (0, -(screen_height - background_height) / 2))
+        if special_chk3: screen.blit(special_background, (0, -(screen_height - background_height) / 2))
 
         
         for i in range(0,4):
@@ -1065,11 +1076,11 @@ def start_game(music_index, soundList):
                             pushed_time += 1
                         
                         elif ((((note1_rect.top - hit_note_rect.top) / note_height * 100 <= -95) and\
-                             (note4_rect.left == hit_note_rect.left)) or\
+                             (note1_rect.left == hit_note_rect.left)) or\
                             (((note2_rect.top - hit_note_rect.top) / note_height * 100 <= -95) and\
-                             (note4_rect.left == hit_note_rect.left)) or\
+                             (note2_rect.left == hit_note_rect.left)) or\
                             (((note3_rect.top - hit_note_rect.top) / note_height * 100 <= -95) and\
-                             (note4_rect.left == hit_note_rect.left)) or\
+                             (note3_rect.left == hit_note_rect.left)) or\
                             (((note4_rect.top - hit_note_rect.top) / note_height * 100 <= -95) and\
                              (note4_rect.left == hit_note_rect.left))):
                             combo = 0
