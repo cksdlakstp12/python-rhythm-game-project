@@ -1,5 +1,6 @@
 import pygame as P
-import os, sys, musicFunctions, time, requests, random, musicNodeList
+import pandas as pd
+import os, sys, musicFunctions, time, requests, random, musicNoteList
 from bs4 import BeautifulSoup
 
 #####################################################################
@@ -45,12 +46,11 @@ select_music_sound.set_volume(0.5)
 music_volume = 1.0
 
 
-# weather data crawling
+# weather data crawling (맑음, 구름, 비, 눈, 흐림)
 html = requests.get('https://search.naver.com/search.naver?query=날씨')
 soup = BeautifulSoup(html.text, 'html.parser')
 data = soup.find("div", {'class':'weather_box'})
 weatherData = data.find('p', {'class':'cast_txt'}).text
-print(weatherData)
 
 
 # option window png files
@@ -154,14 +154,14 @@ quit_game_btn_height = quit_game_btn_size[1]
 
 
 # start game page files
-node1 = P.image.load(os.path.join(image_path, "node.png"))
-node2 = P.image.load(os.path.join(image_path, "node.png"))
-node3 = P.image.load(os.path.join(image_path, "node.png"))
-node4 = P.image.load(os.path.join(image_path, "node.png"))
-node_size = node1.get_rect().size
-node_height = node_size[1]
-node_width = node_size[0]
-nodes = [node1, node2, node3, node4]
+note1 = P.image.load(os.path.join(image_path, "note.png"))
+note2 = P.image.load(os.path.join(image_path, "note.png"))
+note3 = P.image.load(os.path.join(image_path, "note.png"))
+note4 = P.image.load(os.path.join(image_path, "note.png"))
+note_size = note1.get_rect().size
+note_height = note_size[1]
+note_width = note_size[0]
+notes = [note1, note2, note3, note4]
 
 hit_effect = P.image.load(os.path.join(image_path, "hit_effect.png"))
 hit_effect_size = hit_effect.get_rect().size
@@ -171,18 +171,16 @@ ingame_line = P.image.load(os.path.join(image_path, "ingame_line.png"))
 ingame_line_size = ingame_line.get_rect().size
 ingame_line_width = ingame_line_size[0]
 
-hit_node = P.image.load(os.path.join(image_path, "hit_node.png"))
-hit_node_size = hit_node.get_rect().size
-hit_node_width = hit_node_size[0]
-hit_node_height = hit_node_size[1]
+hit_note = P.image.load(os.path.join(image_path, "hit_note.png"))
+hit_note_size = hit_note.get_rect().size
+hit_note_width = hit_note_size[0]
+hit_note_height = hit_note_size[1]
 
-node_hit_chk = [False, False, False, False]
+note_hit_chk = [False, False, False, False]
 
 fade_img = P.image.load(os.path.join(image_path, "fade_img.png"))
 
 total_time = 3
-
-
 
 
 def fade_out_img():
@@ -498,22 +496,16 @@ def select_music():
     clicked_btn = []
     start_menu_btn_list = [back_arrow_btn_rect, left_arrow_btn_rect, right_arrow_btn_rect, select_music_btn_rect]
 
-    music_list_idx_chk = 0
+    soundList = musicFunctions.SoundList().getMusiclist()
 
-    recomend_music = []
+    music_list_idx_chk = 0
 
     music_play_chk = True
 
-    for music in musicFunctions.soundList:
+    for music in soundList:
         if music.getMusicType() in weatherData:
-            recomend_music.append(music)
-
-    random_recomend = random.randrange(0, len(recomend_music))
-
-    recomend_music = [recomend_music[random_recomend]]
-
-    musicFunctions.soundList.insert(0, recomend_music[0])
-
+            soundList.insert(0, music)
+            break
 
     while select_music_quit_chk:
         P.mixer.music.set_volume(music_volume)
@@ -529,40 +521,57 @@ def select_music():
 
         if back_arrow_btn_rect in clicked_btn:
             btn_click_sound.play()
-            del musicFunctions.soundList[0]
+            del soundList[0]
             return
 
         elif left_arrow_btn_rect in clicked_btn:
             btn_click_sound.play()
+            
             if music_list_idx_chk > 0:
                 music_list_idx_chk -= 1
+
             music_play_chk = True
             clicked_btn = []
         
         elif right_arrow_btn_rect in clicked_btn:
             btn_click_sound.play()
-            if music_list_idx_chk < (len(musicFunctions.soundList) - 1):
+
+            if music_list_idx_chk < (len(soundList) - 1):
                 music_list_idx_chk += 1
+
             music_play_chk = True
             clicked_btn = []
         
         elif select_music_btn_rect in clicked_btn:
+
             select_music_sound.play()
             P.mixer.music.stop()
+
             while 1:
                 fade_out_img()
-                tmp = start_game(music_list_idx_chk)
-                print(tmp)
+                
+                tmp = start_game(music_list_idx_chk, soundList)
+                
                 if tmp == "quit": break
-            fade_out_img()
+
             P.mixer.music.play(-1)
+
+            del soundList[0]
+            
+            for music in soundList:
+                if music.getMusicType() in weatherData:
+                    soundList.insert(0, music)
+                    break
+
+            fade_out_img()
+
             clicked_btn = []
 
 
-        for chk in range(0, len(musicFunctions.soundList)):
+        for chk in range(0, len(soundList)):
             if music_play_chk and music_list_idx_chk == chk:
                 P.mixer.stop()
-                P.mixer.music.load(os.path.join(music_path, musicFunctions.soundList[chk].getMusicPath()))
+                P.mixer.music.load(os.path.join(music_path, soundList[chk].getMusicPath()))
                 P.mixer.music.play() 
                 music_play_chk = False
     
@@ -571,11 +580,11 @@ def select_music():
 
 
         if music_list_idx_chk == 0:
-            first_img = P.image.load(os.path.join(image_path, musicFunctions.soundList[music_list_idx_chk].getCoverImage()))
+            first_img = P.image.load(os.path.join(image_path, soundList[music_list_idx_chk].getCoverImage()))
             first_img_size = first_img.get_rect().size
             first_img_width = first_img_size[0]
             first_img_height = first_img_size[1]
-            second_img = P.image.load(os.path.join(image_path, musicFunctions.soundList[music_list_idx_chk + 1].getCoverImage()))
+            second_img = P.image.load(os.path.join(image_path, soundList[music_list_idx_chk + 1].getCoverImage()))
             second_img_size = second_img.get_rect().size
             second_img_width = second_img_size[0]
             second_img_height = second_img_size[1]
@@ -585,7 +594,7 @@ def select_music():
             recomend_title_msg = music_font.render(recomend_title, True, (0, 0, 0))
             recomend_title_msg_rect = recomend_title_msg.get_rect(center=(int((screen_width)/2), int(50)))  
             
-            music_title = musicFunctions.soundList[music_list_idx_chk].getName()
+            music_title = soundList[music_list_idx_chk].getName()
             music_title_msg = default_font.render(music_title, True, (0, 0, 0))
             music_title_msg_rect = music_title_msg.get_rect(center=(int((screen_width)/2), int(100))) 
 
@@ -597,12 +606,12 @@ def select_music():
 
         else:
 
-            if music_list_idx_chk == (len(musicFunctions.soundList) - 1):            
-                first_img = P.image.load(os.path.join(image_path, musicFunctions.soundList[music_list_idx_chk - 1].getCoverImage()))
+            if music_list_idx_chk == (len(soundList) - 1):            
+                first_img = P.image.load(os.path.join(image_path, soundList[music_list_idx_chk - 1].getCoverImage()))
                 first_img_size = first_img.get_rect().size
                 first_img_width = first_img_size[0]
                 first_img_height = first_img_size[1]
-                second_img = P.image.load(os.path.join(image_path, musicFunctions.soundList[music_list_idx_chk].getCoverImage()))
+                second_img = P.image.load(os.path.join(image_path, soundList[music_list_idx_chk].getCoverImage()))
                 second_img_size = second_img.get_rect().size
                 second_img_width = second_img_size[0]
                 second_img_height = second_img_size[1]
@@ -611,15 +620,15 @@ def select_music():
                 screen.blit(second_img, ((screen_width - second_img_width)/2, (screen_height - second_img_height)/ 2))
                 
             else:
-                first_img = P.image.load(os.path.join(image_path, musicFunctions.soundList[music_list_idx_chk - 1].getCoverImage()))
+                first_img = P.image.load(os.path.join(image_path, soundList[music_list_idx_chk - 1].getCoverImage()))
                 first_img_size = first_img.get_rect().size
                 first_img_width = first_img_size[0]
                 first_img_height = first_img_size[1]
-                second_img = P.image.load(os.path.join(image_path, musicFunctions.soundList[music_list_idx_chk].getCoverImage()))
+                second_img = P.image.load(os.path.join(image_path, soundList[music_list_idx_chk].getCoverImage()))
                 second_img_size = second_img.get_rect().size
                 second_img_width = second_img_size[0]
                 second_img_height = second_img_size[1]
-                third_img = P.image.load(os.path.join(image_path, musicFunctions.soundList[music_list_idx_chk + 1].getCoverImage()))
+                third_img = P.image.load(os.path.join(image_path, soundList[music_list_idx_chk + 1].getCoverImage()))
                 third_img_size = third_img.get_rect().size
                 third_img_width = third_img_size[0]
                 third_img_height = third_img_size[1]
@@ -628,11 +637,11 @@ def select_music():
                 screen.blit(second_img, ((screen_width - second_img_width)/2, (screen_height - second_img_height)/ 2))
                 screen.blit(third_img, ((screen_width - third_img_width)/2 + second_img_width + 100, (screen_height - third_img_height)/ 2))
 
-            music_title = musicFunctions.soundList[music_list_idx_chk].getName()
+            music_title = soundList[music_list_idx_chk].getName()
             music_title_msg = music_font.render(music_title, True, (0, 0, 0))
             music_title_msg_rect = music_title_msg.get_rect(center=(int((screen_width)/2), int(50))) 
 
-            music_score = "Score : " + str(musicFunctions.soundList[music_list_idx_chk].getScore())
+            music_score = "Score : " + str(soundList[music_list_idx_chk].getScore())
             music_score_msg = default_font.render(music_score, True, (0, 0, 0))
             music_score_msg_rect = music_score_msg.get_rect(center=(int((screen_width)/2), int(100)))  
             
@@ -656,10 +665,11 @@ def select_music():
     P.quit()
 
 
-def game_result(score, combo, music_index):
+def game_result(score, combo, music_index, soundList):
+    
     background = P.image.load(os.path.join(image_path, "fade_img.png"))
 
-    cover_img = P.image.load(os.path.join(image_path, musicFunctions.soundList[music_index].getCoverImage()))
+    cover_img = P.image.load(os.path.join(image_path, soundList[music_index].getCoverImage()))
     cover_img_size = cover_img.get_rect().size
     cover_img_width = cover_img_size[0]
     cover_img_height = cover_img_size[1]
@@ -680,10 +690,9 @@ def game_result(score, combo, music_index):
     game_quit_rect.left = (screen_width - quit_game_btn_width) / 2 + quit_game_btn_width / 2
     game_quit_rect.top = screen_height - quit_game_btn_height
 
-    best_score_int = int(musicFunctions.soundList[music_index].getScore())
+    best_score_int = int(soundList[music_index].getScore())
     best_score_tmp = 0
     score_tmp = 0
-    best_score_tmp = 0
     combo_tmp = 0
 
     game_result_chk = True
@@ -691,7 +700,13 @@ def game_result(score, combo, music_index):
     clicked_btn = []
     start_menu_btn_list = [restart_btn_rect, game_quit_rect]
 
-    time.sleep(3)
+    best_combo_chk = len(soundList[music_index].getNoteList())
+
+    recomend_music_chk = True
+
+    not_recomend_music_chk = True
+
+    recomend_music = soundList[0]
 
     while game_result_chk:
 
@@ -717,27 +732,27 @@ def game_result(score, combo, music_index):
             btn_click_sound.play()
             return "quit"
 
-        if score_tmp < score: score_tmp += 100
-        elif best_score_tmp < best_score_int: best_score_tmp += 1
-        elif combo_tmp < combo: combo_tmp += 1
+        if score_tmp != score: score_tmp += 100
+        elif best_score_tmp != best_score_int: best_score_tmp += 100
+        elif combo_tmp != combo: combo_tmp += 1
 
         result_score = "SCORE : {}".format(score_tmp)
-        result_score_msg = btn_font.render(result_score, True, (0, 0, 0))
+        result_score_msg = default_font.render(result_score, True, (0, 0, 0))
         result_score_msg_rect = result_score_msg.get_rect(center=(int(screen_width/2 +250), int(screen_height / 2 - 100)))
 
-        best_score = "BEST SCORE : {}".format(best_score_tmp)
-        best_score_msg = btn_font.render(best_score, True, (0, 0, 0))
-        best_score_msg_rect = best_score_msg.get_rect(center=(int(screen_width/2 +250), int(screen_height / 2)))
+        result_best_score = "BEST SCORE : {}".format(best_score_tmp)
+        result_best_score_msg = default_font.render(result_best_score, True, (0, 0, 0))
+        result_best_score_msg_rect = result_best_score_msg.get_rect(center=(int(screen_width/2 +250), int(screen_height / 2)))
 
-        result_combo = "COMBO : {0} / {1}".format(combo_tmp, len(musicFunctions.soundList[music_index].getNodeList()))
-        result_combo_msg = btn_font.render(result_combo, True, (0, 0, 0))
+        result_combo = "COMBO : {0} / {1}".format(combo_tmp, best_combo_chk)
+        result_combo_msg = default_font.render(result_combo, True, (0, 0, 0))
         result_combo_msg_rect = result_combo_msg.get_rect(center=(int(screen_width/2 + 250), int(screen_height / 2 + 100)))
 
         screen.blit(background, (0, 0))
         screen.blit(cover_img, (screen_width/2 - cover_img_width, (screen_height - cover_img_height) / 2))
 
         screen.blit(result_score_msg, result_score_msg_rect)
-        screen.blit(best_score_msg, best_score_msg_rect)
+        screen.blit(result_best_score_msg, result_best_score_msg_rect)
         screen.blit(result_combo_msg, result_combo_msg_rect)
 
         screen.blit(restart_btn, ((screen_width - restart_btn_width) / 2 - restart_btn_width / 2, screen_height - restart_btn_height))
@@ -745,12 +760,48 @@ def game_result(score, combo, music_index):
         screen.blit(restart_msg, restart_msg_rect)
         screen.blit(quit_game_msg, quit_game_msg_rect)
 
-        if (score_tmp == score) and (best_score_tmp == best_score) and (combo_tmp == combo):
+        if (score_tmp == score) and (best_score_tmp == best_score_int) and (combo_tmp == combo):
+
             if best_score_int < score:
+
                 time.sleep(1)
                 new_score = "NEW SCORE!!"
-                new_score_msg = title_font.render(new_score, True, (0, 0, 0))
-                new_score_msg_rect = new_score_msg.get_rect(center=(int(screen_width/2), int(screen_height / 2)))
+                new_score_msg = btn_font.render(new_score, True, (0, 0, 0))
+                new_score_msg_rect = new_score_msg.get_rect(center=(int(screen_width/2 + 250), int(screen_height / 2 + 200)))
+
+                if music_index == 0 and recomend_music_chk:
+                    
+                    recomend_music_idx = 0
+
+                    for idx, sound in enumerate(soundList):
+                        if idx == 0: continue
+                        elif sound.getName() == recomend_music.getName():
+                            recomend_music_idx = idx
+                            break
+
+                    musicFunctions.data_best_score[recomend_music_idx] = score
+                    df = pd.DataFrame({"name":musicFunctions.data_name, "file_name":musicFunctions.data_file_name, 
+                        "cover_img_name":musicFunctions.data_cover_img_name, "type_name":musicFunctions.data_type_name, 
+                        "best_score":musicFunctions.data_best_score
+                        })
+                    write = pd.ExcelWriter("DataBase.xlsx", engine="xlsxwriter")
+                    df.to_excel(write, sheet_name="Sheet1")
+                    write.close()   
+
+                    recomend_music_chk = False
+
+                elif music_index != 0 and not_recomend_music_chk:
+                    musicFunctions.data_best_score[music_index] = score
+                    df = pd.DataFrame({"name":musicFunctions.data_name, "file_name":musicFunctions.data_file_name, 
+                        "cover_img_name":musicFunctions.data_cover_img_name, "type_name":musicFunctions.data_type_name, 
+                        "best_score":musicFunctions.data_best_score
+                        })
+                    write = pd.ExcelWriter("DataBase.xlsx", engine="xlsxwriter")
+                    df.to_excel(write, sheet_name="Sheet1")
+                    write.close()    
+
+                    not_recomend_music_chk = False          
+
                 screen.blit(new_score_msg, new_score_msg_rect)
 
         P.display.update()
@@ -758,8 +809,8 @@ def game_result(score, combo, music_index):
     P.quit()
 
 
-def start_game(music_index):
-    background = P.image.load(os.path.join(image_path, musicFunctions.soundList[music_index].getCoverImage()))
+def start_game(music_index, soundList):
+    background = P.image.load(os.path.join(image_path, soundList[music_index].getCoverImage()))
     background_size = background.get_rect().size
     background_height = background_size[1]
 
@@ -771,43 +822,49 @@ def start_game(music_index):
     option_btn_icon_rect.top = 10
 
     
-    node1_rect = nodes[0].get_rect()
-    node1_rect.left = (2*0 + 1) * 10 + 0 * node_width + 11
-    node1_rect.top = screen_height - node_height - 5
+    note1_rect = notes[0].get_rect()
+    note1_rect.left = (2*0 + 1) * 10 + 0 * note_width + 11
+    note1_rect.top = screen_height - note_height - 5
     
-    node2_rect = nodes[0].get_rect()
-    node2_rect.left = (2*1 + 1) * 10 + 1 * node_width + 11
-    node2_rect.top = screen_height - node_height - 5
+    note2_rect = notes[0].get_rect()
+    note2_rect.left = (2*1 + 1) * 10 + 1 * note_width + 11
+    note2_rect.top = screen_height - note_height - 5
     
-    node3_rect = nodes[0].get_rect()
-    node3_rect.left = (2*2 + 1) * 10 + 2 * node_width + 11
-    node3_rect.top = screen_height - node_height - 5
+    note3_rect = notes[0].get_rect()
+    note3_rect.left = (2*2 + 1) * 10 + 2 * note_width + 11
+    note3_rect.top = screen_height - note_height - 5
     
-    node4_rect = nodes[0].get_rect()
-    node4_rect.left = (2*3 + 1) * 10 + 3 * node_width + 11
-    node4_rect.top = screen_height - node_height - 5
+    note4_rect = notes[0].get_rect()
+    note4_rect.left = (2*3 + 1) * 10 + 3 * note_width + 11
+    note4_rect.top = screen_height - note_height - 5
 
     perfect = "PERFECT!"
     perfect_msg = default_font.render(perfect, True, (122, 82, 182))
-    perfect_msg_rect = perfect_msg.get_rect(center=(int(screen_width/2 - 200), int(screen_height / 2)))
+    perfect_msg_rect = perfect_msg.get_rect(center=(int(screen_width/2 - 110), int(screen_height / 2)))
 
     greate = "GREATE!"
     greate_msg = default_font.render(greate, True, (41, 123, 223))
-    greate_msg_rect = greate_msg.get_rect(center=(int(screen_width/2 - 200), int(screen_height / 2)))
-
-    good = "GOOD!"
-    good_msg = default_font.render(good, True, (56, 107, 208))
-    good_msg_rect = good_msg.get_rect(center=(int(screen_width/2 - 200), int(screen_height / 2)))
+    greate_msg_rect = greate_msg.get_rect(center=(int(screen_width/2 - 110), int(screen_height / 2)))
 
     nice = "NICE!"
     nice_msg = default_font.render(nice, True, (223, 84, 41))
-    nice_msg_rect = nice_msg.get_rect(center=(int(screen_width/2 - 200), int(screen_height / 2)))
+    nice_msg_rect = nice_msg.get_rect(center=(int(screen_width/2 - 110), int(screen_height / 2)))
+
+    good = "GOOD!"
+    good_msg = default_font.render(good, True, (56, 107, 208))
+    good_msg_rect = good_msg.get_rect(center=(int(screen_width/2 - 110), int(screen_height / 2)))
 
     bad = "BAD.."
     bad_msg = default_font.render(bad, True, (223, 84, 41))
-    bad_msg_rect = bad_msg.get_rect(center=(int(screen_width/2 - 200), int(screen_height / 2)))
+    bad_msg_rect = bad_msg.get_rect(center=(int(screen_width/2 - 110), int(screen_height / 2)))
 
-    node_list = musicFunctions.soundList[music_index].getNodeList()
+    perfect_chk = False
+    greate_chk = False
+    good_chk = False
+    nice_chk = False
+    bad_chk = False
+
+    note_list = soundList[music_index].getNoteList()
 
     timer_chk = True
 
@@ -823,11 +880,11 @@ def start_game(music_index):
 
     start_menu_btn_list = [option_btn_icon_rect]
 
-    hit_node_list = []
+    hit_note_list = []
 
     start_game_chk = True
 
-    node_speed = 0.5
+    note_speed = 0.5
 
     combo = 0
 
@@ -835,9 +892,9 @@ def start_game(music_index):
 
     elapsed_time_chk = False
 
-    node_fin_chk = 0
+    note_fin_chk = 0
 
-    node_clicked_chk = False
+    pushed_time = 0
 
     while start_game_chk:
 
@@ -848,21 +905,21 @@ def start_game(music_index):
                 start_game_chk = False
                 
             elif event.type == P.KEYDOWN:
-                if event.key == P.K_a: node_hit_chk[0] = True
-                elif event.key == P.K_s: node_hit_chk[1] = True
-                elif event.key == P.K_d: node_hit_chk[2] = True
-                elif event.key == P.K_f: node_hit_chk[3] = True
+                if event.key == P.K_a: note_hit_chk[0] = True
+                elif event.key == P.K_s: note_hit_chk[1] = True
+                elif event.key == P.K_d: note_hit_chk[2] = True
+                elif event.key == P.K_f: note_hit_chk[3] = True
                 elif event.key == P.K_ESCAPE: clicked_btn = [option_btn_icon_rect]
+                elif (event.key == P.K_d) and (event.key == P.K_j) and (event.key == P.K_a): print("엄준식")
 
-                # if event.key == P.K_d and event.key == P.K_j and event.key == P.K_a: print("엄준식")
                 
-
             elif event.type == P.KEYUP:
-                if event.key == P.K_a: node_hit_chk[0] = False
-                elif event.key == P.K_s: node_hit_chk[1] = False
-                elif event.key == P.K_d: node_hit_chk[2] = False
-                elif event.key == P.K_f: node_hit_chk[3] = False
+                if event.key == P.K_a: note_hit_chk[0] = False
+                elif event.key == P.K_s: note_hit_chk[1] = False
+                elif event.key == P.K_d: note_hit_chk[2] = False
+                elif event.key == P.K_f: note_hit_chk[3] = False
 
+                pushed_time = 0
 
 
             elif event.type == P.MOUSEBUTTONDOWN:
@@ -909,11 +966,11 @@ def start_game(music_index):
 
             temp_width = 0
 
-            if node_hit_chk[i]: screen.blit(hit_effect, (10 + i*hit_effect_width, 0))
-            width = (2*i + 1) * 10 + i * node_width + 1
-            line_width = (2*(i + 1)) * 10 + (i+1) * node_width
+            if note_hit_chk[i]: screen.blit(hit_effect, (10 + i*hit_effect_width, 0))
+            width = (2*i + 1) * 10 + i * note_width + 1
+            line_width = (2*(i + 1)) * 10 + (i+1) * note_width
             screen.blit(ingame_line, (10 + temp_width - 1, 0))
-            screen.blit(nodes[i], (10 + width, screen_height - node_height - 5))
+            screen.blit(notes[i], (10 + width, screen_height - note_height - 5))
             screen.blit(ingame_line, (10 + line_width, 0))
             temp_width = width
 
@@ -937,89 +994,136 @@ def start_game(music_index):
                 music_chk = False
 
             elif music_chk:
-                P.mixer.music.load(os.path.join(music_path, musicFunctions.soundList[music_index].getMusicPath()))
+                P.mixer.music.load(os.path.join(music_path, soundList[music_index].getMusicPath()))
                 P.mixer.music.play()
                 game_started_chk = True
                 timer_chk = False
                 music_chk = False
                 start_ticks = P.time.get_ticks()
 
+            if pushed_time < 1:
+                for note in hit_note_list:
+                    if note.getYPos() < (screen_height + note_height):
+                        hit_note_rect = hit_note.get_rect()
+                        hit_note_rect.left = note.getXPos()
+                        hit_note_rect.top = note.getYPos()
 
-            for node in hit_node_list:
-                if node.getYPos() < (screen_height + node_height):
-                    hit_node_rect = hit_node.get_rect()
-                    hit_node_rect.left = node.getXPos()
-                    hit_node_rect.top = node.getYPos()
+                        screen.blit(hit_note, (note.getXPos(), note.getYPos()))
+                        note.plusYPos(note_speed * dt)
 
-                    screen.blit(hit_node, (node.getXPos(), node.getYPos()))
-                    node.plusYPos(node_speed * dt)
+                        if (abs(note1_rect.top - hit_note_rect.top) / note_height * 100 <= 10) and note_hit_chk[0]:
+                            combo += 1
+                            total_score += 1000
+                            del hit_note_list[0]
+                            perfect_chk = True
+                            greate_chk = False
+                            good_chk = False
+                            nice_chk = False
+                            bad_chk = False
+                            pushed_time += 1
 
-                    if (abs(node1_rect.top - hit_node_rect.top) / node_height * 100 <= 10) and node_hit_chk[0]:
-                        combo += 1
-                        total_score += 1000
-                        screen.blit(perfect_msg, perfect_msg_rect)
-                        del hit_node_list[0]
+                        elif (abs(note2_rect.top - hit_note_rect.top) / note_height * 100 <= 30) and note_hit_chk[1]:
+                            combo += 1
+                            total_score += 800
+                            del hit_note_list[0]
+                            perfect_chk = False
+                            greate_chk = True
+                            good_chk = False
+                            nice_chk = False
+                            bad_chk = False
+                            pushed_time += 1
 
-                    elif (abs(node2_rect.top - hit_node_rect.top) / node_height * 100 <= 30) and node_hit_chk[1]:
-                        combo += 1
-                        total_score += 800
-                        screen.blit(greate_msg, greate_msg_rect)
-                        del hit_node_list[0]
+                        elif (abs(note3_rect.top - hit_note_rect.top) / note_height * 100 <= 50) and note_hit_chk[2]:
+                            combo += 1
+                            total_score += 600
+                            del hit_note_list[0]
+                            perfect_chk = False
+                            greate_chk = False
+                            good_chk = False
+                            nice_chk = True
+                            bad_chk = False
+                            pushed_time += 1
 
-                    elif (abs(node3_rect.top - hit_node_rect.top) / node_height * 100 <= 50) and node_hit_chk[2]:
-                        combo += 1
-                        total_score += 600
-                        screen.blit(good_msg, good_msg_rect)
-                        del hit_node_list[0]
+                        elif (abs(note4_rect.top - hit_note_rect.top) / note_height * 100 <= 70) and note_hit_chk[3]:
+                            combo = 0
+                            total_score += 200
+                            del hit_note_list[0]
+                            perfect_chk = False
+                            greate_chk = False
+                            good_chk = True
+                            nice_chk = False
+                            bad_chk = False
+                            pushed_time += 1
+                        
+                        elif (((note1_rect.top - hit_note_rect.top) / note_height * 100 <= -95) or\
+                            ((note2_rect.top - hit_note_rect.top) / note_height * 100 <= -95) or\
+                            ((note3_rect.top - hit_note_rect.top) / note_height * 100 <= -95) or\
+                            ((note4_rect.top - hit_note_rect.top) / note_height * 100 <= -95)):
+                            combo = 0
+                            del hit_note_list[0]
+                            perfect_chk = False
+                            greate_chk = False
+                            good_chk = False
+                            nice_chk = False
+                            bad_chk = True
 
-                    elif (abs(node4_rect.top - hit_node_rect.top) / node_height * 100 <= 70) and node_hit_chk[3]:
-                        combo = 0
-                        total_score += 200
-                        screen.blit(nice_msg, nice_msg_rect)
-                        del hit_node_list[0]
-                    
-                    elif (((node1_rect.top - hit_node_rect.top) / node_height * 100 <= -95) or\
-                          ((node2_rect.top - hit_node_rect.top) / node_height * 100 <= -95) or\
-                          ((node3_rect.top - hit_node_rect.top) / node_height * 100 <= -95) or\
-                          ((node4_rect.top - hit_node_rect.top) / node_height * 100 <= -95)):
-                        combo = 0
-                        screen.blit(bad_msg, bad_msg_rect)
-                        del hit_node_list[0]
-
-                    elif (node_hit_chk[0] or node_hit_chk[1] or node_hit_chk[2] or node_hit_chk[3]):
-                        combo = 0
-                        screen.blit(bad_msg, bad_msg_rect)
+                        elif (note_hit_chk[0] or note_hit_chk[1] or note_hit_chk[2] or note_hit_chk[3]):
+                            combo = 0
+                            perfect_chk = False
+                            greate_chk = False
+                            good_chk = False
+                            nice_chk = False
+                            bad_chk = True
+                            pushed_time += 1
+                            
 
         elapsed_time = int((P.time.get_ticks() - start_ticks) / 1000)
         if tmp_time != elapsed_time: elapsed_time_chk = True
         tmp_time = elapsed_time
 
         if elapsed_time_chk:
-            if elapsed_time in node_list:
+            if elapsed_time in note_list:
                 r = random.randint(0, 3)
-                x_pos = (2 * r + 1) * 10 + r * node_width + 11
-                hit_node_list.append(musicNodeList.Node(x_pos, 0))
+                x_pos = (2 * r + 1) * 10 + r * note_width + 11
+                hit_note_list.append(musicNoteList.Note(x_pos, 0))
                 elapsed_time_chk = False
-                node_fin_chk += 1
+                note_fin_chk += 1
                     
-        if len(node_list) == node_fin_chk:
-            time.sleep(7)
+        if len(note_list) == note_fin_chk:
+            time.sleep(3)
             P.mixer.music.stop()
             fade_out_img()
-            result = game_result(total_score, combo, music_index)
+            result = game_result(total_score, combo, music_index, soundList)
             return result
+
+        if perfect_chk: screen.blit(perfect_msg, perfect_msg_rect)
+        elif greate_chk: screen.blit(greate_msg, greate_msg_rect)
+        elif nice_chk: screen.blit(nice_msg, nice_msg_rect)
+        elif good_chk: screen.blit(good_msg, good_msg_rect)
+        elif bad_chk: screen.blit(bad_msg, bad_msg_rect)
+
+
 
         screen.blit(in_game_score_msg, in_game_score_msg_rect)
         screen.blit(in_game_combo_msg, in_game_combo_msg_rect)
         
 
         P.display.update()
+        
 
     P.quit()
 
 
 def run_game():
     start_menu()
+    df = pd.DataFrame({"name":musicFunctions.data_name, "file_name":musicFunctions.data_file_name, 
+                       "cover_img_name":musicFunctions.data_cover_img_name, "type_name":musicFunctions.data_type_name, 
+                       "best_score":musicFunctions.data_best_score
+                      })
+    write = pd.ExcelWriter("DataBase.xlsx", engine="xlsxwriter")
+    df.to_excel(write, sheet_name="Sheet1")
+    write.close()
 
 
-run_game()
+if __name__ == "__main__":
+    run_game()
