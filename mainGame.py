@@ -554,8 +554,6 @@ def select_music():
                 
                 if tmp == "quit": break
 
-            P.mixer.music.play(-1)
-
             del soundList[0]
             
             for music in soundList:
@@ -564,6 +562,8 @@ def select_music():
                     break
 
             fade_out_img()
+
+            P.mixer.music.play(-1)
 
             clicked_btn = []
 
@@ -821,6 +821,7 @@ def start_game(music_index, soundList):
     option_btn_icon_rect.left = screen_width - option_btn_icon_width - 10
     option_btn_icon_rect.top = 10
 
+    special_background = P.image.load(os.path.join(image_path, "special_img.jpeg"))
     
     note1_rect = notes[0].get_rect()
     note1_rect.left = (2*0 + 1) * 10 + 0 * note_width + 11
@@ -896,6 +897,8 @@ def start_game(music_index, soundList):
 
     pushed_time = 0
 
+    special_chk = False
+
     while start_game_chk:
 
         dt = clock.tick(30)
@@ -905,13 +908,14 @@ def start_game(music_index, soundList):
                 start_game_chk = False
                 
             elif event.type == P.KEYDOWN:
+                if (event.key == P.K_d) and (event.key == P.K_j) and (event.key == P.K_a): special_chk = True
+
                 if event.key == P.K_a: note_hit_chk[0] = True
                 elif event.key == P.K_s: note_hit_chk[1] = True
                 elif event.key == P.K_d: note_hit_chk[2] = True
                 elif event.key == P.K_f: note_hit_chk[3] = True
                 elif event.key == P.K_ESCAPE: clicked_btn = [option_btn_icon_rect]
-                elif (event.key == P.K_d) and (event.key == P.K_j) and (event.key == P.K_a): print("엄준식")
-
+                
                 
             elif event.type == P.KEYUP:
                 if event.key == P.K_a: note_hit_chk[0] = False
@@ -960,6 +964,7 @@ def start_game(music_index, soundList):
         screen.blit(default_background, (0, 0))
         screen.blit(background, (0, -(screen_height - background_height) / 2))
         screen.blit(option_btn_icon, ((screen_width - option_btn_icon_width - 10), 10))
+        if special_chk: screen.blit(special_background, (0, -(screen_height - background_height) / 2))
 
         
         for i in range(0,4):
@@ -1011,7 +1016,8 @@ def start_game(music_index, soundList):
                         screen.blit(hit_note, (note.getXPos(), note.getYPos()))
                         note.plusYPos(note_speed * dt)
 
-                        if (abs(note1_rect.top - hit_note_rect.top) / note_height * 100 <= 10) and note_hit_chk[0]:
+                        if (abs(note1_rect.top - hit_note_rect.top) / note_height * 100 <= 10) and\
+                           (note1_rect.left == hit_note_rect.left) and note_hit_chk[0]:
                             combo += 1
                             total_score += 1000
                             del hit_note_list[0]
@@ -1022,7 +1028,8 @@ def start_game(music_index, soundList):
                             bad_chk = False
                             pushed_time += 1
 
-                        elif (abs(note2_rect.top - hit_note_rect.top) / note_height * 100 <= 30) and note_hit_chk[1]:
+                        elif (abs(note2_rect.top - hit_note_rect.top) / note_height * 100 <= 30) and\
+                             (note2_rect.left == hit_note_rect.left) and note_hit_chk[1]:
                             combo += 1
                             total_score += 800
                             del hit_note_list[0]
@@ -1033,7 +1040,8 @@ def start_game(music_index, soundList):
                             bad_chk = False
                             pushed_time += 1
 
-                        elif (abs(note3_rect.top - hit_note_rect.top) / note_height * 100 <= 50) and note_hit_chk[2]:
+                        elif (abs(note3_rect.top - hit_note_rect.top) / note_height * 100 <= 50) and\
+                             (note3_rect.left == hit_note_rect.left) and note_hit_chk[2]:
                             combo += 1
                             total_score += 600
                             del hit_note_list[0]
@@ -1044,7 +1052,8 @@ def start_game(music_index, soundList):
                             bad_chk = False
                             pushed_time += 1
 
-                        elif (abs(note4_rect.top - hit_note_rect.top) / note_height * 100 <= 70) and note_hit_chk[3]:
+                        elif (abs(note4_rect.top - hit_note_rect.top) / note_height * 100 <= 70) and\
+                             (note4_rect.left == hit_note_rect.left) and note_hit_chk[3]:
                             combo = 0
                             total_score += 200
                             del hit_note_list[0]
@@ -1055,10 +1064,14 @@ def start_game(music_index, soundList):
                             bad_chk = False
                             pushed_time += 1
                         
-                        elif (((note1_rect.top - hit_note_rect.top) / note_height * 100 <= -95) or\
-                            ((note2_rect.top - hit_note_rect.top) / note_height * 100 <= -95) or\
-                            ((note3_rect.top - hit_note_rect.top) / note_height * 100 <= -95) or\
-                            ((note4_rect.top - hit_note_rect.top) / note_height * 100 <= -95)):
+                        elif ((((note1_rect.top - hit_note_rect.top) / note_height * 100 <= -95) and\
+                             (note4_rect.left == hit_note_rect.left)) or\
+                            (((note2_rect.top - hit_note_rect.top) / note_height * 100 <= -95) and\
+                             (note4_rect.left == hit_note_rect.left)) or\
+                            (((note3_rect.top - hit_note_rect.top) / note_height * 100 <= -95) and\
+                             (note4_rect.left == hit_note_rect.left)) or\
+                            (((note4_rect.top - hit_note_rect.top) / note_height * 100 <= -95) and\
+                             (note4_rect.left == hit_note_rect.left))):
                             combo = 0
                             del hit_note_list[0]
                             perfect_chk = False
@@ -1101,7 +1114,6 @@ def start_game(music_index, soundList):
         elif nice_chk: screen.blit(nice_msg, nice_msg_rect)
         elif good_chk: screen.blit(good_msg, good_msg_rect)
         elif bad_chk: screen.blit(bad_msg, bad_msg_rect)
-
 
 
         screen.blit(in_game_score_msg, in_game_score_msg_rect)
