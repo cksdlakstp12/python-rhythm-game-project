@@ -299,7 +299,124 @@ def option_window_open():
 
 
 def in_game_option_window_open():
+    option_window_resize = P.transform.scale(option_window, (957, 680))
+    option_window_resize_size = option_window_resize.get_rect().size
+    option_window_resize_width = option_window_resize_size[0]
+    option_window_resize_height = option_window_resize_size[1]
+
+    game_continue_btn_rect = game_continue_btn.get_rect()
+    game_continue_btn_rect.left = (screen_width - game_continue_btn_width)/2
+    game_continue_btn_rect.top = (screen_height - game_continue_btn_height)/2 - 250
+
+    in_game_option_btn_rect = in_game_option_btn.get_rect()
+    in_game_option_btn_rect.left = (screen_width - in_game_option_btn_width)/2
+    in_game_option_btn_rect.top = (screen_height - in_game_option_btn_height)/2 - 100
+
+    game_restart_btn_rect = game_restart_btn.get_rect()
+    game_restart_btn_rect.left = (screen_width - game_restart_btn_width)/2
+    game_restart_btn_rect.top = (screen_height - game_restart_btn_height)/2 + 100
+
+    in_game_quit_btn_rect = in_game_quit_btn.get_rect()
+    in_game_quit_btn_rect.left = (screen_width - in_game_quit_btn_width)/2
+    in_game_quit_btn_rect.top = (screen_height - in_game_quit_btn_height)/2 + 250
     
+    in_game_continue = "Continue"
+    in_game_continue_msg = default_font.render(in_game_continue, True, (255, 255, 255))
+    in_game_continue_msg_rect = in_game_continue_msg.get_rect(center=(int(screen_width/2), int((screen_height - game_continue_btn_height)/2 - 200)))
+
+    in_game_settings = "Settings"
+    in_game_settings_msg = default_font.render(in_game_settings, True, (255, 255, 255))
+    in_game_settings_msg_rect = in_game_settings_msg.get_rect(center=(int(screen_width/2), int((screen_height - game_restart_btn_height)/2 - 50)))
+
+    in_game_start = "Game Restart"
+    in_game_start_msg = default_font.render(in_game_start, True, (255, 255, 255))
+    in_game_start_msg_rect = in_game_start_msg.get_rect(center=(int(screen_width/2), int((screen_height - in_game_option_btn_height)/2 +150)))
+
+    in_game_quit = "Game Quit"
+    in_game_quit_msg = default_font.render(in_game_quit, True, (255, 255, 255))
+    in_game_quit_msg_rect = in_game_quit_msg.get_rect(center=(int(screen_width/2), int((screen_height - in_game_quit_btn_height)/2 + 300)))
+
+    cancel = False
+
+    clicked_btn = []
+    option_window_btn_list = [game_continue_btn_rect, in_game_option_btn_rect, game_restart_btn_rect, in_game_quit_btn_rect]
+
+    while not cancel:
+
+        for event in P.event.get():
+            if event.type == P.QUIT:
+                cancel = True
+
+            elif event.type == P.KEYDOWN:
+                if event.key == P.K_ESCAPE: clicked_btn = [game_continue_btn_rect]
+            
+            elif event.type == P.MOUSEBUTTONUP:
+                pos = P.mouse.get_pos()
+
+                clicked_btn = [b for b in option_window_btn_list if b.collidepoint(pos)]
+        
+
+        if game_continue_btn_rect in clicked_btn:
+            print("게임 진행")
+            btn_click_sound.play()
+            return "continue"
+
+        elif in_game_option_btn_rect in clicked_btn:
+            print("옵션 실행")
+            btn_click_sound.play()
+            option_window_open()
+            clicked_btn = []
+
+        elif game_restart_btn_rect in clicked_btn:
+            print("게임 재시작")
+            btn_click_sound.play()
+            return "restart"
+
+        elif in_game_quit_btn_rect in clicked_btn:
+            print("게임 종료")
+            btn_click_sound.play()
+            return "quit"
+
+        screen.blit(option_window_resize, ((screen_width - option_window_resize_width) / 2, (screen_height - option_window_resize_height) / 2))
+        screen.blit(game_continue_btn, ((screen_width - game_continue_btn_width)/2, (screen_height - game_continue_btn_height)/2 - 250))
+        screen.blit(in_game_option_btn, ((screen_width - in_game_option_btn_width)/2, (screen_height - in_game_option_btn_height)/2 - 100))
+        screen.blit(game_restart_btn, ((screen_width - game_restart_btn_width)/2, (screen_height - game_restart_btn_height)/2 + 100))
+        screen.blit(in_game_quit_btn, ((screen_width - in_game_quit_btn_width)/2, (screen_height - in_game_quit_btn_height)/2 + 250))
+        screen.blit(in_game_continue_msg, in_game_continue_msg_rect)
+        screen.blit(in_game_start_msg, in_game_start_msg_rect)
+        screen.blit(in_game_settings_msg, in_game_settings_msg_rect)
+        screen.blit(in_game_quit_msg, in_game_quit_msg_rect)
+
+        P.display.update()
+
+    P.quit()
+
+"""
+def music_add_option_window():
+    
+
+    input_box1 = inputTextFunctions.InputBox(100, 100, 140, 32)
+    input_boxes = [input_box1]
+    done = False
+
+    while not done:
+        for event in P.event.get():
+            if event.type == pg.QUIT:
+                done = True
+            for box in input_boxes:
+                box.handle_event(event)
+
+        for box in input_boxes:
+            box.update()
+
+        screen.fill((30, 30, 30))
+        for box in input_boxes:
+            box.draw(screen)
+
+        P.display.update()
+        
+    P.quit()
+"""
 
 def start_menu():
     global music_volume
