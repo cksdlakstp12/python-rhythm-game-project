@@ -1,6 +1,6 @@
 import pygame as P
 import pandas as pd
-import os, sys, musicFunctions, time, requests, random, musicNoteList
+import os, sys, musicFunctions, time, requests, random, musicNoteList, inputTextFunctions
 from bs4 import BeautifulSoup
 
 #####################################################################
@@ -85,6 +85,11 @@ option_btn = P.image.load(os.path.join(image_path, "btn.png"))
 option_btn_size = option_btn.get_rect().size
 option_btn_width = option_btn_size[0]
 option_btn_height = option_btn_size[1]
+
+music_add_btn = P.image.load(os.path.join(image_path, "btn.png"))
+music_add_btn_size = music_add_btn.get_rect().size
+music_add_btn_width = music_add_btn_size[0]
+music_add_btn_height = music_add_btn_size[1]
 
 game_quit_btn = P.image.load(os.path.join(image_path, "btn.png"))
 game_quit_btn_size = game_quit_btn.get_rect().size
@@ -294,98 +299,7 @@ def option_window_open():
 
 
 def in_game_option_window_open():
-    option_window_resize = P.transform.scale(option_window, (957, 680))
-    option_window_resize_size = option_window_resize.get_rect().size
-    option_window_resize_width = option_window_resize_size[0]
-    option_window_resize_height = option_window_resize_size[1]
-
-    game_continue_btn_rect = game_continue_btn.get_rect()
-    game_continue_btn_rect.left = (screen_width - game_continue_btn_width)/2
-    game_continue_btn_rect.top = (screen_height - game_continue_btn_height)/2 - 250
-
-    in_game_option_btn_rect = in_game_option_btn.get_rect()
-    in_game_option_btn_rect.left = (screen_width - in_game_option_btn_width)/2
-    in_game_option_btn_rect.top = (screen_height - in_game_option_btn_height)/2 - 100
-
-    game_restart_btn_rect = game_restart_btn.get_rect()
-    game_restart_btn_rect.left = (screen_width - game_restart_btn_width)/2
-    game_restart_btn_rect.top = (screen_height - game_restart_btn_height)/2 + 100
-
-    in_game_quit_btn_rect = in_game_quit_btn.get_rect()
-    in_game_quit_btn_rect.left = (screen_width - in_game_quit_btn_width)/2
-    in_game_quit_btn_rect.top = (screen_height - in_game_quit_btn_height)/2 + 250
     
-    in_game_continue = "Continue"
-    in_game_continue_msg = default_font.render(in_game_continue, True, (255, 255, 255))
-    in_game_continue_msg_rect = in_game_continue_msg.get_rect(center=(int(screen_width/2), int((screen_height - game_continue_btn_height)/2 - 200)))
-
-    in_game_settings = "Settings"
-    in_game_settings_msg = default_font.render(in_game_settings, True, (255, 255, 255))
-    in_game_settings_msg_rect = in_game_settings_msg.get_rect(center=(int(screen_width/2), int((screen_height - game_restart_btn_height)/2 - 50)))
-
-    in_game_start = "Game Restart"
-    in_game_start_msg = default_font.render(in_game_start, True, (255, 255, 255))
-    in_game_start_msg_rect = in_game_start_msg.get_rect(center=(int(screen_width/2), int((screen_height - in_game_option_btn_height)/2 +150)))
-
-    in_game_quit = "Game Quit"
-    in_game_quit_msg = default_font.render(in_game_quit, True, (255, 255, 255))
-    in_game_quit_msg_rect = in_game_quit_msg.get_rect(center=(int(screen_width/2), int((screen_height - in_game_quit_btn_height)/2 + 300)))
-
-    cancel = False
-
-    clicked_btn = []
-    option_window_btn_list = [game_continue_btn_rect, in_game_option_btn_rect, game_restart_btn_rect, in_game_quit_btn_rect]
-
-    while not cancel:
-
-        for event in P.event.get():
-            if event.type == P.QUIT:
-                cancel = True
-
-            elif event.type == P.KEYDOWN:
-                if event.key == P.K_ESCAPE: clicked_btn = [game_continue_btn_rect]
-            
-            elif event.type == P.MOUSEBUTTONUP:
-                pos = P.mouse.get_pos()
-
-                clicked_btn = [b for b in option_window_btn_list if b.collidepoint(pos)]
-        
-
-        if game_continue_btn_rect in clicked_btn:
-            print("게임 진행")
-            btn_click_sound.play()
-            return "continue"
-
-        elif in_game_option_btn_rect in clicked_btn:
-            print("옵션 실행")
-            btn_click_sound.play()
-            option_window_open()
-            clicked_btn = []
-
-        elif game_restart_btn_rect in clicked_btn:
-            print("게임 재시작")
-            btn_click_sound.play()
-            return "restart"
-
-        elif in_game_quit_btn_rect in clicked_btn:
-            print("게임 종료")
-            btn_click_sound.play()
-            return "quit"
-
-        screen.blit(option_window_resize, ((screen_width - option_window_resize_width) / 2, (screen_height - option_window_resize_height) / 2))
-        screen.blit(game_continue_btn, ((screen_width - game_continue_btn_width)/2, (screen_height - game_continue_btn_height)/2 - 250))
-        screen.blit(in_game_option_btn, ((screen_width - in_game_option_btn_width)/2, (screen_height - in_game_option_btn_height)/2 - 100))
-        screen.blit(game_restart_btn, ((screen_width - game_restart_btn_width)/2, (screen_height - game_restart_btn_height)/2 + 100))
-        screen.blit(in_game_quit_btn, ((screen_width - in_game_quit_btn_width)/2, (screen_height - in_game_quit_btn_height)/2 + 250))
-        screen.blit(in_game_continue_msg, in_game_continue_msg_rect)
-        screen.blit(in_game_start_msg, in_game_start_msg_rect)
-        screen.blit(in_game_settings_msg, in_game_settings_msg_rect)
-        screen.blit(in_game_quit_msg, in_game_quit_msg_rect)
-
-        P.display.update()
-
-    P.quit()
-
 
 def start_menu():
     global music_volume
@@ -400,11 +314,15 @@ def start_menu():
 
     game_settings = "Game Settings"
     game_settings_msg = default_font.render(game_settings, True, (255, 255, 255))
-    game_settings_msg_rect = game_settings_msg.get_rect(center=(int(screen_width/2), int(screen_height / 2 + 100)))
+    game_settings_msg_rect = game_settings_msg.get_rect(center=(int(screen_width/2), int(screen_height / 2 + 75)))
+
+    add_music = "Add Music"
+    add_music_msg = default_font.render(add_music, True, (255, 255, 255))
+    add_music_msg_rect = add_music_msg.get_rect(center=(int(screen_width/2), int(screen_height / 2 + 200)))
 
     game_quit = "Game Quit"
     game_quit_msg = default_font.render(game_quit, True, (255, 255, 255))
-    game_quit_msg_rect = game_quit_msg.get_rect(center=(int(screen_width/2), int(screen_height / 2 + 250)))
+    game_quit_msg_rect = game_quit_msg.get_rect(center=(int(screen_width/2), int(screen_height / 2 + 325)))
 
     P.mixer.music.load(os.path.join(music_path, "background_music.mp3"))
     P.mixer.music.play(-1)
@@ -418,15 +336,19 @@ def start_menu():
 
     option_btn_rect = option_btn.get_rect()
     option_btn_rect.left = (screen_width-option_btn_width)/2
-    option_btn_rect.top = (screen_height - option_btn_height)/2 + 100
+    option_btn_rect.top = (screen_height - option_btn_height)/2 + 75
+
+    music_add_btn_rect = music_add_btn.get_rect()
+    music_add_btn_rect.left = (screen_width-music_add_btn_width)/2
+    music_add_btn_rect.top = (screen_height - music_add_btn_height)/2 + 200
 
     game_quit_btn_rect = game_quit_btn.get_rect()
     game_quit_btn_rect.left = (screen_width-game_quit_btn_width)/2
-    game_quit_btn_rect.top = (screen_height - game_quit_btn_height)/2 + 250
+    game_quit_btn_rect.top = (screen_height - game_quit_btn_height)/2 + 325
     
 
     clicked_btn = []
-    start_menu_btn_list = [game_quit_btn_rect, game_start_btn_rect, option_btn_rect]
+    start_menu_btn_list = [game_quit_btn_rect, game_start_btn_rect, option_btn_rect, music_add_btn_rect]
 
 
     while (not start_menu_quit_chk) and start_menu_select_chk:
@@ -455,6 +377,11 @@ def start_menu():
             option_window_open()
             clicked_btn = []
 
+        elif music_add_btn_rect in clicked_btn:
+            btn_click_sound.play()
+            music_add_option_window()
+            clicked_btn = []
+
         elif game_quit_btn_rect in clicked_btn: 
             btn_click_sound.play()
             print("종료 버튼 클릭")
@@ -464,10 +391,12 @@ def start_menu():
         screen.blit(background, (0, 0))
         screen.blit(game_title_msg, game_title_msg_rect)
         screen.blit(game_start_btn, ((screen_width-game_start_btn_width)/2, (screen_height - game_start_btn_height)/2 - 50))
-        screen.blit(option_btn, ((screen_width-option_btn_width)/2, (screen_height - option_btn_height)/2 + 100))
-        screen.blit(game_quit_btn, ((screen_width-game_quit_btn_width)/2, (screen_height - game_quit_btn_height)/2 + 250))
+        screen.blit(option_btn, ((screen_width-option_btn_width)/2, (screen_height - option_btn_height)/2 + 75))
+        screen.blit(music_add_btn, ((screen_width - music_add_btn_width)/2, (screen_height - music_add_btn_height)/2 + 200))
+        screen.blit(game_quit_btn, ((screen_width-game_quit_btn_width)/2, (screen_height - game_quit_btn_height)/2 + 325))
         screen.blit(game_start_msg, game_start_msg_rect)
         screen.blit(game_settings_msg, game_settings_msg_rect)
+        screen.blit(add_music_msg, add_music_msg_rect)
         screen.blit(game_quit_msg, game_quit_msg_rect)
 
         P.display.update()
@@ -1024,8 +953,6 @@ def start_game(music_index, soundList):
                         hit_note_rect.left = note.getXPos()
                         hit_note_rect.top = note.getYPos()
 
-                        screen.blit(hit_note, (note.getXPos(), note.getYPos()))
-                        note.plusYPos(note_speed * dt)
 
                         if (abs(note1_rect.top - hit_note_rect.top) / note_height * 100 <= 10) and\
                            (note1_rect.left == hit_note_rect.left) and note_hit_chk[0]:
@@ -1101,7 +1028,7 @@ def start_game(music_index, soundList):
                             pushed_time += 1
                             
 
-        elapsed_time = int((P.time.get_ticks() - start_ticks) / 1000)
+        elapsed_time = int((P.time.get_ticks() - start_ticks) / 100)
         if tmp_time != elapsed_time: elapsed_time_chk = True
         tmp_time = elapsed_time
 
@@ -1125,6 +1052,10 @@ def start_game(music_index, soundList):
         elif nice_chk: screen.blit(nice_msg, nice_msg_rect)
         elif good_chk: screen.blit(good_msg, good_msg_rect)
         elif bad_chk: screen.blit(bad_msg, bad_msg_rect)
+
+        for note in hit_note_list:
+            screen.blit(hit_note, (note.getXPos(), note.getYPos()))
+            note.plusYPos(note_speed * dt)
 
 
         screen.blit(in_game_score_msg, in_game_score_msg_rect)
